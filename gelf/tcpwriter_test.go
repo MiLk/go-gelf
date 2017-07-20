@@ -153,7 +153,6 @@ func TestExtraDataTCP(t *testing.T) {
 		Full:     string(full),
 		TimeUnix: float64(time.Now().Unix()),
 		Level:    6, // info
-		Facility: "writer_test",
 		Extra:    extra,
 		RawExtra: []byte(`{"woo": "hoo"}`),
 	}

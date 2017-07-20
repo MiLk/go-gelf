@@ -21,7 +21,6 @@ type GelfWriter struct {
 	addr     string
 	conn     net.Conn
 	hostname string
-	Facility string // defaults to current process name
 }
 
 // Close connection and interrupt blocked Read or Write operations

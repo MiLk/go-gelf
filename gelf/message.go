@@ -15,7 +15,6 @@ type Message struct {
 	Full     string                 `json:"full_message,omitempty"`
 	TimeUnix float64                `json:"timestamp"`
 	Level    int32                  `json:"level,omitempty"`
-	Facility string                 `json:"facility,omitempty"`
 	Extra    map[string]interface{} `json:"-"`
 	RawExtra json.RawMessage        `json:"-"`
 }
@@ -97,8 +96,6 @@ func (m *Message) UnmarshalJSON(data []byte) error {
 			m.TimeUnix = v.(float64)
 		case "level":
 			m.Level = int32(v.(float64))
-		case "facility":
-			m.Facility = v.(string)
 		}
 	}
 	return nil
@@ -114,7 +111,7 @@ func (m *Message) toBytes() (messageBytes []byte, err error) {
 	return messageBytes, nil
 }
 
-func constructMessage(p []byte, hostname string, facility string, file string, line int) (m *Message) {
+func constructMessage(p []byte, hostname string, file string, line int) (m *Message) {
 	// remove trailing and leading whitespace
 	p = bytes.TrimSpace(p)
 
@@ -136,7 +133,6 @@ func constructMessage(p []byte, hostname string, facility string, file string, l
 		Full:     string(full),
 		TimeUnix: float64(time.Now().Unix()),
 		Level:    6, // info
-		Facility: facility,
 		Extra: map[string]interface{}{
 			"_file": file,
 			"_line": line,

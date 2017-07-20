@@ -192,7 +192,6 @@ func TestExtraData(t *testing.T) {
 		Full:     string(full),
 		TimeUnix: float64(time.Now().Unix()),
 		Level:    6, // info
-		Facility: "udpwriter_test",
 		Extra:    extra,
 		RawExtra: []byte(`{"woo": "hoo"}`),
 	}
@@ -256,7 +255,6 @@ func BenchmarkWriteBestSpeed(b *testing.B) {
 			Full:     "full message",
 			TimeUnix: float64(time.Now().Unix()),
 			Level:    6, // info
-			Facility: w.Facility,
 			Extra:    map[string]interface{}{"_file": "1234", "_line": "3456"},
 		})
 	}
@@ -282,7 +280,6 @@ func BenchmarkWriteNoCompression(b *testing.B) {
 			Full:     "full message",
 			TimeUnix: float64(time.Now().Unix()),
 			Level:    6, // info
-			Facility: w.Facility,
 			Extra:    map[string]interface{}{"_file": "1234", "_line": "3456"},
 		})
 	}
@@ -308,7 +305,6 @@ func BenchmarkWriteDisableCompressionCompletely(b *testing.B) {
 			Full:     "full message",
 			TimeUnix: float64(time.Now().Unix()),
 			Level:    6, // info
-			Facility: w.Facility,
 			Extra:    map[string]interface{}{"_file": "1234", "_line": "3456"},
 		})
 	}
@@ -334,7 +330,6 @@ func BenchmarkWriteDisableCompressionAndPreencodeExtra(b *testing.B) {
 			Full:     "full message",
 			TimeUnix: float64(time.Now().Unix()),
 			Level:    6, // info
-			Facility: w.Facility,
 			RawExtra: json.RawMessage(`{"_file":"1234","_line": "3456"}`),
 		})
 	}
