@@ -19,6 +19,7 @@ import (
 
 func TestNewUDPWriter(t *testing.T) {
 	w, err := NewUDPWriter("")
+	assertIsWriteCloser(w)
 	if err == nil || w != nil {
 		t.Errorf("New didn't fail")
 		return

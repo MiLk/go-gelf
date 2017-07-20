@@ -11,6 +11,7 @@ import (
 
 func TestNewTCPWriter(t *testing.T) {
 	w, err := NewTCPWriter("")
+	assertIsWriteCloser(w)
 	if err == nil && w != nil {
 		t.Errorf("New didn't fail")
 		return
