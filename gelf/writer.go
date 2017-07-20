@@ -20,7 +20,7 @@ type Writer interface {
 type GelfWriter struct {
 	addr     string
 	conn     net.Conn
-	hostname string
+	host     string
 }
 
 // Close connection and interrupt blocked Read or Write operations

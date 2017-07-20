@@ -111,7 +111,7 @@ func (m *Message) toBytes() (messageBytes []byte, err error) {
 	return messageBytes, nil
 }
 
-func constructMessage(p []byte, hostname string, file string, line int) (m *Message) {
+func constructMessage(p []byte, host string, file string, line int) (m *Message) {
 	// remove trailing and leading whitespace
 	p = bytes.TrimSpace(p)
 
@@ -128,7 +128,7 @@ func constructMessage(p []byte, hostname string, file string, line int) (m *Mess
 
 	m = &Message{
 		Version:  "1.1",
-		Host:     hostname,
+		Host:     host,
 		Short:    string(short),
 		Full:     string(full),
 		TimeUnix: float64(time.Now().Unix()),

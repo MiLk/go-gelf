@@ -70,7 +70,7 @@ func NewUDPWriter(addr string) (*UDPWriter, error) {
 	if w.conn, err = net.Dial("udp", addr); err != nil {
 		return nil, err
 	}
-	if w.hostname, err = os.Hostname(); err != nil {
+	if w.host, err = os.Hostname(); err != nil {
 		return nil, err
 	}
 
@@ -218,7 +218,7 @@ func (w *UDPWriter) Write(p []byte) (n int, err error) {
 	// 1 for the function that called us.
 	file, line := getCallerIgnoringLogMulti(1)
 
-	m := constructMessage(p, w.hostname, file, line)
+	m := constructMessage(p, w.host, file, line)
 
 	if err = w.WriteMessage(m); err != nil {
 		return 0, err
