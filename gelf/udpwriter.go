@@ -83,7 +83,7 @@ func NewUDPWriter(addr string) (*UDPWriter, error) {
 //
 //     2-byte magic (0x1e 0x0f), 8 byte id, 1 byte sequence id, 1 byte
 //     total, chunk-data
-func (w *GelfWriter) writeChunked(zBytes []byte) (err error) {
+func (w *UDPWriter) writeChunked(zBytes []byte) (err error) {
 	b := make([]byte, 0, ChunkSize)
 	buf := bytes.NewBuffer(b)
 	nChunksI := numChunks(zBytes)
