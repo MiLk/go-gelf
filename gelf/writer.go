@@ -22,7 +22,6 @@ type GelfWriter struct {
 	conn     net.Conn
 	hostname string
 	Facility string // defaults to current process name
-	proto    string
 }
 
 // Close connection and interrupt blocked Read or Write operations

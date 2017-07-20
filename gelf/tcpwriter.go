@@ -25,7 +25,6 @@ func NewTCPWriter(addr string) (*TCPWriter, error) {
 	w := new(TCPWriter)
 	w.MaxReconnect = DefaultMaxReconnect
 	w.ReconnectDelay = DefaultReconnectDelay
-	w.proto = "tcp"
 	w.addr = addr
 
 	if w.conn, err = net.Dial("tcp", addr); err != nil {
