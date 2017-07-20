@@ -18,7 +18,6 @@ type Writer interface {
 // messages to a graylog2 server, or data from a stream-oriented
 // interface (like the functions in log).
 type GelfWriter struct {
-	addr     string
 	conn     net.Conn
 	host     string
 }

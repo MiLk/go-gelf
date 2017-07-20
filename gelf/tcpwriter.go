@@ -15,6 +15,7 @@ const (
 
 type TCPWriter struct {
 	GelfWriter
+	addr           string
 	mu             sync.Mutex
 	MaxReconnect   int
 	ReconnectDelay time.Duration
