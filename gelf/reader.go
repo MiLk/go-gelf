@@ -15,6 +15,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Graylog2/go-gelf/gelf/codec/packet"
 	"github.com/Graylog2/go-gelf/gelf/message"
 )
 
@@ -22,6 +23,11 @@ type Reader struct {
 	mu   sync.Mutex
 	conn net.Conn
 }
+
+var (
+	magicZlib = []byte{0x78}
+	magicGzip = []byte{0x1f, 0x8b}
+)
 
 func NewReader(addr string) (*Reader, error) {
 	var err error
@@ -64,7 +70,7 @@ func (r *Reader) Read(p []byte) (int, error) {
 }
 
 func (r *Reader) ReadMessage() (*message.Message, error) {
-	cBuf := make([]byte, ChunkSize)
+	cBuf := make([]byte, packet.ChunkSize)
 	var (
 		err        error
 		n, length  int
@@ -81,7 +87,7 @@ func (r *Reader) ReadMessage() (*message.Message, error) {
 		}
 		cHead, cBuf = cBuf[:2], cBuf[:n]
 
-		if bytes.Equal(cHead, magicChunked) {
+		if bytes.Equal(cHead, packet.MagicChunked) {
 			//fmt.Printf("chunked %v\n", cBuf[:14])
 			cid, seq, total = cBuf[2:2+8], cBuf[2+8], cBuf[2+8+1]
 			if ocid != nil && !bytes.Equal(cid, ocid) {
@@ -90,9 +96,9 @@ func (r *Reader) ReadMessage() (*message.Message, error) {
 				ocid = cid
 				chunks = make([][]byte, total)
 			}
-			n = len(cBuf) - chunkedHeaderLen
+			n = len(cBuf) - packet.ChunkedHeaderLen
 			//fmt.Printf("setting chunks[%d]: %d\n", seq, n)
-			chunks[seq] = append(make([]byte, 0, n), cBuf[chunkedHeaderLen:]...)
+			chunks[seq] = append(make([]byte, 0, n), cBuf[packet.ChunkedHeaderLen:]...)
 			length += n
 		} else { //not chunked
 			if total > 0 {

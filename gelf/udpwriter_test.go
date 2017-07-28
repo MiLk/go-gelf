@@ -16,6 +16,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Graylog2/go-gelf/gelf/codec/packet"
 	"github.com/Graylog2/go-gelf/gelf/message"
 )
 
@@ -28,7 +29,7 @@ func TestNewUDPWriter(t *testing.T) {
 	}
 }
 
-func sendAndRecv(msgData string, compress CompressType) (*message.Message, error) {
+func sendAndRecv(msgData string, compress packet.CompressType) (*message.Message, error) {
 	r, err := NewReader("127.0.0.1:0")
 	if err != nil {
 		return nil, fmt.Errorf("NewReader: %s", err)
@@ -38,17 +39,18 @@ func sendAndRecv(msgData string, compress CompressType) (*message.Message, error
 	if err != nil {
 		return nil, fmt.Errorf("NewUDPWriter: %s", err)
 	}
-	w.CompressionType = compress
+	w.Pw.Compressor.CompressionType = compress
 
 	if _, err = w.Write([]byte(msgData)); err != nil {
 		return nil, fmt.Errorf("w.Write: %s", err)
 	}
 
 	w.Close()
-	return r.ReadMessage()
+	msg, err := r.ReadMessage()
+	return msg, err
 }
 
-func sendAndRecvMsg(msg *message.Message, compress CompressType) (*message.Message, error) {
+func sendAndRecvMsg(msg *message.Message, compress packet.CompressType) (*message.Message, error) {
 	r, err := NewReader("127.0.0.1:0")
 	if err != nil {
 		return nil, fmt.Errorf("NewReader: %s", err)
@@ -58,7 +60,7 @@ func sendAndRecvMsg(msg *message.Message, compress CompressType) (*message.Messa
 	if err != nil {
 		return nil, fmt.Errorf("NewUDPWriter: %s", err)
 	}
-	w.CompressionType = compress
+	w.Pw.Compressor.CompressionType = compress
 
 	if err = w.WriteMessage(msg); err != nil {
 		return nil, fmt.Errorf("w.Write: %s", err)
@@ -71,7 +73,7 @@ func sendAndRecvMsg(msg *message.Message, compress CompressType) (*message.Messa
 // tests single-message (non-chunked) messages that are split over
 // multiple lines
 func TestWriteSmallMultiLine(t *testing.T) {
-	for _, i := range []CompressType{CompressGzip, CompressZlib, CompressNone} {
+	for _, i := range []packet.CompressType{packet.CompressGzip, packet.CompressZlib, packet.CompressNone} {
 		msgData := "awesomesauce\nbananas"
 
 		msg, err := sendAndRecv(msgData, i)
@@ -97,7 +99,7 @@ func TestWriteSmallOneLine(t *testing.T) {
 	msgData := "some awesome thing\n"
 	msgDataTrunc := msgData[:len(msgData)-1]
 
-	msg, err := sendAndRecv(msgData, CompressGzip)
+	msg, err := sendAndRecv(msgData, packet.CompressGzip)
 	if err != nil {
 		t.Errorf("sendAndRecv: %s", err)
 		return
@@ -155,7 +157,7 @@ func TestWriteBigChunked(t *testing.T) {
 	}
 	msgData := "awesomesauce\n" + base64.StdEncoding.EncodeToString(randData)
 
-	for _, i := range []CompressType{CompressGzip, CompressZlib} {
+	for _, i := range []packet.CompressType{packet.CompressGzip, packet.CompressZlib} {
 		msg, err := sendAndRecv(msgData, i)
 		if err != nil {
 			t.Errorf("sendAndRecv: %s", err)
@@ -199,7 +201,7 @@ func TestExtraData(t *testing.T) {
 		RawExtra: []byte(`{"woo": "hoo"}`),
 	}
 
-	for _, i := range []CompressType{CompressGzip, CompressZlib} {
+	for _, i := range []packet.CompressType{packet.CompressGzip, packet.CompressZlib} {
 		msg, err := sendAndRecvMsg(&m, i)
 		if err != nil {
 			t.Errorf("sendAndRecv: %s", err)
@@ -248,7 +250,7 @@ func BenchmarkWriteBestSpeed(b *testing.B) {
 	if err != nil {
 		b.Fatalf("NewUDPWriter: %s", err)
 	}
-	w.CompressionLevel = flate.BestSpeed
+	w.Pw.Compressor.CompressionLevel = flate.BestSpeed
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		w.WriteMessage(&message.Message{
@@ -273,7 +275,7 @@ func BenchmarkWriteNoCompression(b *testing.B) {
 	if err != nil {
 		b.Fatalf("NewUDPWriter: %s", err)
 	}
-	w.CompressionLevel = flate.NoCompression
+	w.Pw.Compressor.CompressionLevel = flate.NoCompression
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		w.WriteMessage(&message.Message{
@@ -298,7 +300,7 @@ func BenchmarkWriteDisableCompressionCompletely(b *testing.B) {
 	if err != nil {
 		b.Fatalf("NewUDPWriter: %s", err)
 	}
-	w.CompressionType = CompressNone
+	w.Pw.Compressor.CompressionType = packet.CompressNone
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		w.WriteMessage(&message.Message{
@@ -323,7 +325,7 @@ func BenchmarkWriteDisableCompressionAndPreencodeExtra(b *testing.B) {
 	if err != nil {
 		b.Fatalf("NewUDPWriter: %s", err)
 	}
-	w.CompressionType = CompressNone
+	w.Pw.Compressor.CompressionType = packet.CompressNone
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		w.WriteMessage(&message.Message{
