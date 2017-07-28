@@ -3,6 +3,7 @@ package gelf
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -13,7 +14,7 @@ func TestNewTCPWriter(t *testing.T) {
 	w, err := NewTCPWriter("")
 	assertIsWriteCloser(w)
 	if err == nil && w != nil {
-		t.Errorf("New didn't fail")
+		t.Error("New didn't fail")
 		return
 	}
 }
@@ -21,7 +22,7 @@ func TestNewTCPWriter(t *testing.T) {
 func TestNewTCPWriterConfig(t *testing.T) {
 	r, _, err := newTCPReader("127.0.0.1:0")
 	if err != nil {
-		t.Errorf("Could not open TCPReader")
+		t.Error("Could not open TCPReader")
 		return
 	}
 	w, err := NewTCPWriter(r.addr())
@@ -229,7 +230,7 @@ func sendAndRecvTCP(msgData string) (*Message, error) {
 	signal <- "stop"
 	done := <-signal
 	if done == "done" {
-		return nil, fmt.Errorf("Wrong signal received")
+		return nil, errors.New("Wrong signal received")
 	}
 
 	message, err := r.readMessage()
@@ -253,7 +254,7 @@ func sendAndRecvMsgTCP(msg *Message) (*Message, error) {
 	signal <- "stop"
 	done := <-signal
 	if done == "done" {
-		return nil, fmt.Errorf("Wrong signal received")
+		return nil, errors.New("Wrong signal received")
 	}
 
 	w.Close()
@@ -291,7 +292,7 @@ func sendAndRecv2MessagesWithDropTCP(msgData1 string, msgData2 string) (*Message
 	signal <- "stop"
 	done := <-signal
 	if done == "done" {
-		return nil, nil, fmt.Errorf("Wrong signal received")
+		return nil, nil, errors.New("Wrong signal received")
 	}
 
 	message2, err := r.readMessage()
