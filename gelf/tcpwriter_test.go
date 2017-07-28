@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/Graylog2/go-gelf/gelf/message"
 )
 
 func TestNewTCPWriter(t *testing.T) {
@@ -52,7 +54,7 @@ func TestNewTCPWriterConfig(t *testing.T) {
 	}
 }
 
-func assertMessages(msg *Message, short, full string, t *testing.T) {
+func assertMessages(msg *message.Message, short, full string, t *testing.T) {
 	if msg.Short != short {
 		t.Errorf("msg.Short: expected %s, got %s", short, msg.Short)
 		return
@@ -148,7 +150,7 @@ func TestExtraDataTCP(t *testing.T) {
 
 	short := "quick"
 	full := short + "\nwith more detail"
-	m := Message{
+	m := message.Message{
 		Version:  "1.0",
 		Host:     "fake-host",
 		Short:    string(short),
@@ -217,7 +219,7 @@ func setupConnections() (*TCPReader, chan string, *TCPWriter, error) {
 	return r, signal, w, nil
 }
 
-func sendAndRecvTCP(msgData string) (*Message, error) {
+func sendAndRecvTCP(msgData string) (*message.Message, error) {
 	r, signal, w, err := setupConnections()
 	if err != nil {
 		return nil, err
@@ -241,7 +243,7 @@ func sendAndRecvTCP(msgData string) (*Message, error) {
 	return message, nil
 }
 
-func sendAndRecvMsgTCP(msg *Message) (*Message, error) {
+func sendAndRecvMsgTCP(msg *message.Message) (*message.Message, error) {
 	r, signal, w, err := setupConnections()
 	if err != nil {
 		return nil, err
@@ -266,7 +268,7 @@ func sendAndRecvMsgTCP(msg *Message) (*Message, error) {
 	return message, nil
 }
 
-func sendAndRecv2MessagesWithDropTCP(msgData1 string, msgData2 string) (*Message, *Message, error) {
+func sendAndRecv2MessagesWithDropTCP(msgData1 string, msgData2 string) (*message.Message, *message.Message, error) {
 	r, signal, w, err := setupConnections()
 	if err != nil {
 		return nil, nil, err

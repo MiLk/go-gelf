@@ -14,6 +14,8 @@ import (
 	"net"
 	"strings"
 	"sync"
+
+	"github.com/Graylog2/go-gelf/gelf/message"
 )
 
 type Reader struct {
@@ -61,7 +63,7 @@ func (r *Reader) Read(p []byte) (int, error) {
 	return strings.NewReader(data).Read(p)
 }
 
-func (r *Reader) ReadMessage() (*Message, error) {
+func (r *Reader) ReadMessage() (*message.Message, error) {
 	cBuf := make([]byte, ChunkSize)
 	var (
 		err        error
@@ -131,7 +133,7 @@ func (r *Reader) ReadMessage() (*Message, error) {
 		return nil, fmt.Errorf("NewReader: %s", err)
 	}
 
-	msg := new(Message)
+	msg := new(message.Message)
 	if err := json.NewDecoder(cReader).Decode(&msg); err != nil {
 		return nil, fmt.Errorf("json.Unmarshal: %s", err)
 	}

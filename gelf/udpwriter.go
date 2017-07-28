@@ -14,7 +14,9 @@ import (
 	"io"
 	"net"
 	"os"
-	"sync"
+
+	"github.com/Graylog2/go-gelf/gelf/message"
+	"github.com/Graylog2/go-gelf/gelf/message/buffer_pool"
 )
 
 type UDPWriter struct {
@@ -137,29 +139,13 @@ func (w *UDPWriter) writeChunked(zBytes []byte) (err error) {
 	return nil
 }
 
-// 1k bytes buffer by default
-var bufPool = sync.Pool{
-	New: func() interface{} {
-		return bytes.NewBuffer(make([]byte, 0, 1024))
-	},
-}
-
-func newBuffer() *bytes.Buffer {
-	b := bufPool.Get().(*bytes.Buffer)
-	if b != nil {
-		b.Reset()
-		return b
-	}
-	return bytes.NewBuffer(nil)
-}
-
 // WriteMessage sends the specified message to the GELF server
 // specified in the call to New().  It assumes all the fields are
 // filled out appropriately.  In general, clients will want to use
 // Write, rather than WriteMessage.
-func (w *UDPWriter) WriteMessage(m *Message) (err error) {
-	mBuf := newBuffer()
-	defer bufPool.Put(mBuf)
+func (w *UDPWriter) WriteMessage(m *message.Message) (err error) {
+	mBuf := buffer_pool.Get()
+	defer buffer_pool.Put(mBuf)
 	if err = m.MarshalJSONBuf(mBuf); err != nil {
 		return err
 	}
@@ -173,12 +159,12 @@ func (w *UDPWriter) WriteMessage(m *Message) (err error) {
 	var zw io.WriteCloser
 	switch w.CompressionType {
 	case CompressGzip:
-		zBuf = newBuffer()
-		defer bufPool.Put(zBuf)
+		zBuf = buffer_pool.Get()
+		defer buffer_pool.Put(zBuf)
 		zw, err = gzip.NewWriterLevel(zBuf, w.CompressionLevel)
 	case CompressZlib:
-		zBuf = newBuffer()
-		defer bufPool.Put(zBuf)
+		zBuf = buffer_pool.Get()
+		defer buffer_pool.Put(zBuf)
 		zw, err = zlib.NewWriterLevel(zBuf, w.CompressionLevel)
 	case CompressNone:
 		zBytes = mBytes
@@ -218,7 +204,7 @@ func (w *UDPWriter) Write(p []byte) (n int, err error) {
 	// 1 for the function that called us.
 	file, line := getCallerIgnoringLogMulti(1)
 
-	m := constructMessage(p, w.host, file, line)
+	m := message.New(p, w.host, file, line)
 
 	if err = w.WriteMessage(m); err != nil {
 		return 0, err

@@ -6,6 +6,8 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	"github.com/Graylog2/go-gelf/gelf/message"
 )
 
 const (
@@ -42,8 +44,8 @@ func NewTCPWriter(addr string) (*TCPWriter, error) {
 // specified in the call to New().  It assumes all the fields are
 // filled out appropriately.  In general, clients will want to use
 // Write, rather than WriteMessage.
-func (w *TCPWriter) WriteMessage(m *Message) (err error) {
-	messageBytes, err := m.toBytes()
+func (w *TCPWriter) WriteMessage(m *message.Message) (err error) {
+	messageBytes, err := m.ToBytes()
 	if err != nil {
 		return err
 	}
@@ -64,7 +66,7 @@ func (w *TCPWriter) WriteMessage(m *Message) (err error) {
 func (w *TCPWriter) Write(p []byte) (n int, err error) {
 	file, line := getCallerIgnoringLogMulti(1)
 
-	m := constructMessage(p, w.host, file, line)
+	m := message.New(p, w.host, file, line)
 
 	if err = w.WriteMessage(m); err != nil {
 		return 0, err

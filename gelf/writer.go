@@ -6,12 +6,14 @@ package gelf
 
 import (
 	"net"
+
+	"github.com/Graylog2/go-gelf/gelf/message"
 )
 
 type Writer interface {
 	Close() error
 	Write([]byte) (int, error)
-	WriteMessage(*Message) error
+	WriteMessage(*message.Message) error
 }
 
 // Writer implements io.Writer and is used to send both discrete

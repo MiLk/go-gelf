@@ -15,6 +15,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/Graylog2/go-gelf/gelf/message"
 )
 
 func TestNewUDPWriter(t *testing.T) {
@@ -26,7 +28,7 @@ func TestNewUDPWriter(t *testing.T) {
 	}
 }
 
-func sendAndRecv(msgData string, compress CompressType) (*Message, error) {
+func sendAndRecv(msgData string, compress CompressType) (*message.Message, error) {
 	r, err := NewReader("127.0.0.1:0")
 	if err != nil {
 		return nil, fmt.Errorf("NewReader: %s", err)
@@ -46,7 +48,7 @@ func sendAndRecv(msgData string, compress CompressType) (*Message, error) {
 	return r.ReadMessage()
 }
 
-func sendAndRecvMsg(msg *Message, compress CompressType) (*Message, error) {
+func sendAndRecvMsg(msg *message.Message, compress CompressType) (*message.Message, error) {
 	r, err := NewReader("127.0.0.1:0")
 	if err != nil {
 		return nil, fmt.Errorf("NewReader: %s", err)
@@ -186,7 +188,7 @@ func TestExtraData(t *testing.T) {
 
 	short := "quick"
 	full := short + "\nwith more detail"
-	m := Message{
+	m := message.Message{
 		Version:  "1.0",
 		Host:     "fake-host",
 		Short:    string(short),
@@ -249,7 +251,7 @@ func BenchmarkWriteBestSpeed(b *testing.B) {
 	w.CompressionLevel = flate.BestSpeed
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		w.WriteMessage(&Message{
+		w.WriteMessage(&message.Message{
 			Version:  "1.1",
 			Host:     w.host,
 			Short:    "short message",
@@ -274,7 +276,7 @@ func BenchmarkWriteNoCompression(b *testing.B) {
 	w.CompressionLevel = flate.NoCompression
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		w.WriteMessage(&Message{
+		w.WriteMessage(&message.Message{
 			Version:  "1.1",
 			Host:     w.host,
 			Short:    "short message",
@@ -299,7 +301,7 @@ func BenchmarkWriteDisableCompressionCompletely(b *testing.B) {
 	w.CompressionType = CompressNone
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		w.WriteMessage(&Message{
+		w.WriteMessage(&message.Message{
 			Version:  "1.1",
 			Host:     w.host,
 			Short:    "short message",
@@ -324,7 +326,7 @@ func BenchmarkWriteDisableCompressionAndPreencodeExtra(b *testing.B) {
 	w.CompressionType = CompressNone
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		w.WriteMessage(&Message{
+		w.WriteMessage(&message.Message{
 			Version:  "1.1",
 			Host:     w.host,
 			Short:    "short message",

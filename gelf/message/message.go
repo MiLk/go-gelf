@@ -1,35 +1,25 @@
-package gelf
+package message
 
 import (
 	"bytes"
 	"encoding/json"
+	"log/syslog"
 	"time"
+
+	"github.com/Graylog2/go-gelf/gelf/message/buffer_pool"
 )
 
-// Message represents the contents of the GELF message.  It is gzipped
-// before sending.
+// Message represents the contents of the GELF message.
 type Message struct {
 	Version  string                 `json:"version"`
 	Host     string                 `json:"host"`
 	Short    string                 `json:"short_message"`
 	Full     string                 `json:"full_message,omitempty"`
 	TimeUnix float64                `json:"timestamp"`
-	Level    int32                  `json:"level,omitempty"`
+	Level    syslog.Priority        `json:"level,omitempty"`
 	Extra    map[string]interface{} `json:"-"`
 	RawExtra json.RawMessage        `json:"-"`
 }
-
-// Syslog severity levels
-const (
-	LOG_EMERG   = 0
-	LOG_ALERT   = 1
-	LOG_CRIT    = 2
-	LOG_ERR     = 3
-	LOG_WARNING = 4
-	LOG_NOTICE  = 5
-	LOG_INFO    = 6
-	LOG_DEBUG   = 7
-)
 
 func (m *Message) MarshalJSONBuf(buf *bytes.Buffer) error {
 	b, err := json.Marshal(m)
@@ -95,15 +85,15 @@ func (m *Message) UnmarshalJSON(data []byte) error {
 		case "timestamp":
 			m.TimeUnix = v.(float64)
 		case "level":
-			m.Level = int32(v.(float64))
+			m.Level = syslog.Priority(v.(float64))
 		}
 	}
 	return nil
 }
 
-func (m *Message) toBytes() (messageBytes []byte, err error) {
-	buf := newBuffer()
-	defer bufPool.Put(buf)
+func (m *Message) ToBytes() (messageBytes []byte, err error) {
+	buf := buffer_pool.Get()
+	defer buffer_pool.Put(buf)
 	if err = m.MarshalJSONBuf(buf); err != nil {
 		return nil, err
 	}
@@ -111,7 +101,7 @@ func (m *Message) toBytes() (messageBytes []byte, err error) {
 	return messageBytes, nil
 }
 
-func constructMessage(p []byte, host string, file string, line int) (m *Message) {
+func New(p []byte, host string, file string, line int) *Message {
 	// remove trailing and leading whitespace
 	p = bytes.TrimSpace(p)
 
@@ -126,7 +116,7 @@ func constructMessage(p []byte, host string, file string, line int) (m *Message)
 		full = p
 	}
 
-	m = &Message{
+	return &Message{
 		Version:  "1.1",
 		Host:     host,
 		Short:    string(short),
@@ -138,6 +128,4 @@ func constructMessage(p []byte, host string, file string, line int) (m *Message)
 			"_line": line,
 		},
 	}
-
-	return m
 }

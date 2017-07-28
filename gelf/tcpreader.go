@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+
+	"github.com/Graylog2/go-gelf/gelf/message"
 )
 
 type TCPReader struct {
@@ -77,10 +79,10 @@ func handleConnection(conn net.Conn, messages chan<- []byte) {
 	}
 }
 
-func (r *TCPReader) readMessage() (*Message, error) {
+func (r *TCPReader) readMessage() (*message.Message, error) {
 	b := <-r.messages
 
-	var msg Message
+	var msg message.Message
 	if err := json.Unmarshal(b[:len(b)-1], &msg); err != nil {
 		return nil, fmt.Errorf("json.Unmarshal: %s", err)
 	}
