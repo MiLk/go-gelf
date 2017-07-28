@@ -64,15 +64,7 @@ func (w *TCPWriter) WriteMessage(m *message.Message) (err error) {
 }
 
 func (w *TCPWriter) Write(p []byte) (n int, err error) {
-	file, line := getCallerIgnoringLogMulti(1)
-
-	m := message.New(p, w.host, file, line)
-
-	if err = w.WriteMessage(m); err != nil {
-		return 0, err
-	}
-
-	return len(p), nil
+	return writeTo(w, w.host, p)
 }
 
 func (w *TCPWriter) writeToSocketWithReconnectAttempts(zBytes []byte) (n int, err error) {

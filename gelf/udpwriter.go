@@ -48,14 +48,5 @@ func (w *UDPWriter) WriteMessage(m *message.Message) error {
 // Write encodes the given string in a GELF message and sends it to
 // the server specified in New().
 func (w *UDPWriter) Write(p []byte) (n int, err error) {
-	// 1 for the function that called us.
-	file, line := getCallerIgnoringLogMulti(1)
-
-	m := message.New(p, w.host, file, line)
-
-	if err = w.WriteMessage(m); err != nil {
-		return 0, err
-	}
-
-	return len(p), nil
+	return writeTo(w, w.host, p)
 }

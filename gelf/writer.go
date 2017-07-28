@@ -28,3 +28,16 @@ type GelfWriter struct {
 func (w *GelfWriter) Close() error {
 	return w.conn.Close()
 }
+
+func writeTo(w Writer, host string, p []byte) (n int, err error) {
+	// 2 for the function that called our caller.
+	file, line := getCallerIgnoringLogMulti(2)
+
+	m := message.New(p, host, file, line)
+
+	if err = w.WriteMessage(m); err != nil {
+		return 0, err
+	}
+
+	return len(p), nil
+}
