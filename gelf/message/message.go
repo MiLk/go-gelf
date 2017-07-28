@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"log/syslog"
 	"time"
-
-	"github.com/Graylog2/go-gelf/gelf/message/buffer_pool"
 )
 
 // Message represents the contents of the GELF message.
@@ -19,45 +17,6 @@ type Message struct {
 	Level    syslog.Priority        `json:"level,omitempty"`
 	Extra    map[string]interface{} `json:"-"`
 	RawExtra json.RawMessage        `json:"-"`
-}
-
-func (m *Message) MarshalJSONBuf(buf *bytes.Buffer) error {
-	b, err := json.Marshal(m)
-	if err != nil {
-		return err
-	}
-	// write up until the final }
-	if _, err = buf.Write(b[:len(b)-1]); err != nil {
-		return err
-	}
-	if len(m.Extra) > 0 {
-		eb, err := json.Marshal(m.Extra)
-		if err != nil {
-			return err
-		}
-		// merge serialized message + serialized extra map
-		if err = buf.WriteByte(','); err != nil {
-			return err
-		}
-		// write serialized extra bytes, without enclosing quotes
-		if _, err = buf.Write(eb[1 : len(eb)-1]); err != nil {
-			return err
-		}
-	}
-
-	if len(m.RawExtra) > 0 {
-		if err := buf.WriteByte(','); err != nil {
-			return err
-		}
-
-		// write serialized extra bytes, without enclosing quotes
-		if _, err = buf.Write(m.RawExtra[1 : len(m.RawExtra)-1]); err != nil {
-			return err
-		}
-	}
-
-	// write final closing quotes
-	return buf.WriteByte('}')
 }
 
 func (m *Message) UnmarshalJSON(data []byte) error {
@@ -91,14 +50,49 @@ func (m *Message) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m *Message) ToBytes() (messageBytes []byte, err error) {
-	buf := buffer_pool.Get()
-	defer buffer_pool.Put(buf)
-	if err = m.MarshalJSONBuf(buf); err != nil {
+func (m *Message) Bytes() ([]byte, error) {
+	b, err := json.Marshal(m)
+	if err != nil {
 		return nil, err
 	}
-	messageBytes = buf.Bytes()
-	return messageBytes, nil
+
+	hasExtra := len(m.Extra) > 0
+	hasRawExtra := len(m.RawExtra) > 0
+
+	if !hasExtra && !hasRawExtra {
+		return b, nil
+	}
+
+	parts := [][]byte{b[:len(b)-1]}
+
+	if hasExtra {
+		eb, err := json.Marshal(m.Extra)
+		if err != nil {
+			return nil, err
+		}
+
+		parts = append(parts, []byte(","), eb[1:len(eb)-1])
+	}
+
+	if hasRawExtra {
+		parts = append(parts, []byte(","), m.RawExtra[1:len(m.RawExtra)-1])
+	}
+
+	parts = append(parts, []byte("}"))
+
+	totalLength := 0
+	for _, p := range parts {
+		totalLength += len(p)
+	}
+
+	res := make([]byte, totalLength)
+
+	var i int
+	for _, p := range parts {
+		i += copy(res[i:], p)
+	}
+
+	return res, nil
 }
 
 func New(p []byte, host string, file string, line int) *Message {

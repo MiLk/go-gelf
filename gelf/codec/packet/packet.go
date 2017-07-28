@@ -20,7 +20,7 @@ func New() *PacketWriter {
 }
 
 func (pw *PacketWriter) WriteMessage(w io.Writer, m *message.Message) error {
-	mBytes, err := m.ToBytes()
+	mBytes, err := m.Bytes()
 	if err != nil {
 		return err
 	}
