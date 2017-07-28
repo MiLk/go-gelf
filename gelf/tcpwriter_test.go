@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Graylog2/go-gelf/gelf/message"
+	"github.com/Graylog2/go-gelf/gelf/writer/tcp"
 )
 
 func TestNewTCPWriter(t *testing.T) {
@@ -204,7 +205,7 @@ func TestWrite2MessagesWithConnectionDropTCP(t *testing.T) {
 	assertMessages(msg2, "Second message", msgData2, t)
 }
 
-func setupConnections() (*TCPReader, chan string, *TCPWriter, error) {
+func setupConnections() (*TCPReader, chan string, *tcp.TCPWriter, error) {
 	r, signal, err := newTCPReader("127.0.0.1:0")
 
 	if err != nil {

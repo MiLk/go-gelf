@@ -130,24 +130,6 @@ func TestWriteSmallOneLine(t *testing.T) {
 	}
 }
 
-func TestGetCaller(t *testing.T) {
-	file, line := getCallerIgnoringLogMulti(1000)
-	if line != 0 || file != "???" {
-		t.Errorf("didn't fail 1 %s %d", file, line)
-		return
-	}
-
-	file, _ = getCaller(0)
-	if !strings.HasSuffix(file, "/gelf/udpwriter_test.go") {
-		t.Errorf("not udpwriter_test.go 1? %s", file)
-	}
-
-	file, _ = getCallerIgnoringLogMulti(0)
-	if !strings.HasSuffix(file, "/gelf/udpwriter_test.go") {
-		t.Errorf("not udpwriter_test.go 2? %s", file)
-	}
-}
-
 // tests single-message (chunked) messages
 func TestWriteBigChunked(t *testing.T) {
 	randData := make([]byte, 4096)
@@ -255,7 +237,7 @@ func BenchmarkWriteBestSpeed(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		w.WriteMessage(&message.Message{
 			Version:  "1.1",
-			Host:     w.host,
+			Host:     w.Host,
 			Short:    "short message",
 			Full:     "full message",
 			TimeUnix: float64(time.Now().Unix()),
@@ -280,7 +262,7 @@ func BenchmarkWriteNoCompression(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		w.WriteMessage(&message.Message{
 			Version:  "1.1",
-			Host:     w.host,
+			Host:     w.Host,
 			Short:    "short message",
 			Full:     "full message",
 			TimeUnix: float64(time.Now().Unix()),
@@ -305,7 +287,7 @@ func BenchmarkWriteDisableCompressionCompletely(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		w.WriteMessage(&message.Message{
 			Version:  "1.1",
-			Host:     w.host,
+			Host:     w.Host,
 			Short:    "short message",
 			Full:     "full message",
 			TimeUnix: float64(time.Now().Unix()),
@@ -330,7 +312,7 @@ func BenchmarkWriteDisableCompressionAndPreencodeExtra(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		w.WriteMessage(&message.Message{
 			Version:  "1.1",
-			Host:     w.host,
+			Host:     w.Host,
 			Short:    "short message",
 			Full:     "full message",
 			TimeUnix: float64(time.Now().Unix()),

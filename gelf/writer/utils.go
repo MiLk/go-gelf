@@ -1,4 +1,4 @@
-package gelf
+package writer
 
 import (
 	"runtime"
